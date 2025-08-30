@@ -1,66 +1,44 @@
-## Foundry
+# Proof of Concept: Vulnerabilities in ReferralManager Contract
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+This repository contains a working Proof of Concept using the Foundry testing framework to demonstrate two security vulnerabilities in the `ReferralManager` smart contract.
 
-Foundry consists of:
+## Vulnerabilities Found
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+### 1. High-Severity: Handler Abuse (Rebate Hijacking)
 
-## Documentation
+-   **Description:** A privileged `handler` address has the unilateral authority to change any trader's associated referral code using the `setReferrerCodeFor()` function. A malicious or compromised handler can exploit this to overwrite a high-volume trader's legitimate referral code with one they control, effectively hijacking all future rebate rewards.
+-   **PoC Test:** `test_poc_handlerCanHijackReferral()` in `test/ReferralManager.t.sol`.
 
-https://book.getfoundry.sh/
+### 2. Medium-Severity: Invalid Referral Code on Secondary Networks
 
-## Usage
+-   **Description:** The contract's multi-chain architecture only validates the existence of referral codes on the `PRIMARY_NETWORK` (Arbitrum, chain ID 42161). On any other chain, a user can call `setReferrerCode()` with any `bytes32` value, including non-existent or garbage data. This pushes the burden of validation entirely off-chain and can lead to lost rewards, user confusion, and potential errors in the reward distribution system.
+-   **PoC Test:** `test_poc_canSetInvalidCodeOnSecondaryNetwork()` in `test/ReferralManager.t.sol`.
 
-### Build
+## Prerequisites
 
-```shell
-$ forge build
-```
+-   [Foundry](https://getfoundry.sh/) (includes `forge` and `anvil`) must be installed.
 
-### Test
+## How to Run the Proof of Concept
 
-```shell
-$ forge test
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone <YOUR_REPOSITORY_URL>
+    cd referral_poc
+    ```
 
-### Format
+2.  **Run the tests:**
+    ```bash
+    forge test -vvv
+    ```
 
-```shell
-$ forge fmt
-```
+## Expected Output
 
-### Gas Snapshots
+You should see both tests pass successfully. The test logs will print messages confirming that the attack steps were executed as planned.
 
-```shell
-$ forge snapshot
-```
+-   `test_poc_handlerCanHijackReferral` will pass, showing that the handler successfully overwrote the trader's referral code.
+-   `test_poc_canSetInvalidCodeOnSecondaryNetwork` will pass, showing that the contract allowed an unregistered code to be set on a simulated secondary network.
 
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+```Suite result: ok. 2 passed; 0 failed; 0 skipped;
+...
+Ran 2 test suites in ...: 4 tests passed, 0 failed, 0 skipped (4 total tests)
 ```
