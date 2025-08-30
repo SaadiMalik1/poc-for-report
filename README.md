@@ -4,12 +4,12 @@ This repository contains a working Proof of Concept using the Foundry testing fr
 
 ## Vulnerabilities Found
 
-### 1. High-Severity: Handler Abuse (Rebate Hijacking)
+### 1.  Handler Abuse (Rebate Hijacking)
 
 -   **Description:** A privileged `handler` address has the unilateral authority to change any trader's associated referral code using the `setReferrerCodeFor()` function. A malicious or compromised handler can exploit this to overwrite a high-volume trader's legitimate referral code with one they control, effectively hijacking all future rebate rewards.
 -   **PoC Test:** `test_poc_handlerCanHijackReferral()` in `test/ReferralManager.t.sol`.
 
-### 2. Medium-Severity: Invalid Referral Code on Secondary Networks
+### 2. Invalid Referral Code on Secondary Networks
 
 -   **Description:** The contract's multi-chain architecture only validates the existence of referral codes on the `PRIMARY_NETWORK` (Arbitrum, chain ID 42161). On any other chain, a user can call `setReferrerCode()` with any `bytes32` value, including non-existent or garbage data. This pushes the burden of validation entirely off-chain and can lead to lost rewards, user confusion, and potential errors in the reward distribution system.
 -   **PoC Test:** `test_poc_canSetInvalidCodeOnSecondaryNetwork()` in `test/ReferralManager.t.sol`.
